@@ -23,3 +23,5 @@ if is_ip_valid(ip):
         print(f'{ip} - {hostname[0]}')
     except:
         print("Nie udało się pobrać hostname dla podanego adresu")
+else:
+    print("Niepoprawny adres IP")
