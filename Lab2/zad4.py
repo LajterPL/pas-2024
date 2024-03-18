@@ -1,9 +1,9 @@
 import socket
 
 host = "127.0.0.1"
-port = 2900
+port = 2901
 
-with socket.socket() as s:
+with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
     try:
         s.settimeout(5)
         s.connect((host, port))
