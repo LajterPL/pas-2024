@@ -1,7 +1,8 @@
 import socket
+import base64
 
 with socket.socket() as s:
-    s.settimeout(15)
+    s.settimeout(30)
 
     print("Podaj adres IP: ")
     host = input()
@@ -40,13 +41,16 @@ with socket.socket() as s:
 
         print(data.decode())
 
-        data = s.recv(1024)
+        readFlag = True
 
-        while data.decode().startswith("."):
-            res = data.decode()
-            print(res)
+        while readFlag:
+            res = s.recv(1024).decode()
 
-            data = s.recv(1024)
+            for line in res.split("\r\n"):
+                if line == ".":
+                    readFlag = False
+                else:
+                    print(line)
 
         print("Podaj numer wiadomości do odczytu: ")
         msg_idx = input()
@@ -55,22 +59,46 @@ with socket.socket() as s:
 
         data = s.recv(1024)
 
-        img_name = ""
-        img = ""
+        msg_content = ""
 
-        shown_lines = ["Date", "Subject", "From", "To"]
+        readFlag = True
 
-        while data.decode() != ".\r\n":
+        while readFlag:
+            res = s.recv(4096).decode()
 
-            res = data.decode()
+            msg_content += res
 
-            for start in shown_lines:
-                if res.startswith(start):
-                    print(res)
-                    print("Stop")
+            for line in res.split("\r\n"):
+                if line == ".":
+                    readFlag = False
 
-            data = s.recv(1024)
+        print("Odczyt wiadomości zakończony...")
 
+        header, content = msg_content[:msg_content.index("Content-Type:")], msg_content[msg_content.index("Content-Type:"):]
+
+        content = content.split("Content-Type:")
+
+        print(header)
+
+        for chunk in content:
+            chunk = chunk.split("\r\n")
+
+            if chunk[0].strip().startswith("text/plain"):
+                for i in range(2, len(chunk)):
+                    print(chunk[i])
+            elif chunk[0].strip().startswith("image/gif"):
+
+                file_name = chunk[0].split("name=\"")[1][:-1]
+
+                img_data = chunk[3]
+                img_data = base64.b64decode(img_data)
+
+                with open(f'./Saved/{file_name}', 'wb') as file:
+                    file.write(img_data)
+
+                print(f'Zapisano plik {file_name}')
+
+        s.close()
     except TimeoutError:
         print("Połączenie z serwerem nie powiodło się")
     finally:
