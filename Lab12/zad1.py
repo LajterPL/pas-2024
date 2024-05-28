@@ -2,10 +2,11 @@ import socket
 import threading
 
 class ClientThread(threading.Thread):
-    def __init__(self, client):
+    def __init__(self, client, address):
         threading.Thread.__init__(self)
 
         self.client = client
+        self.address = address
 
     def run(self):
 
@@ -16,9 +17,7 @@ class ClientThread(threading.Thread):
                 if data:
                     self.client.send(data)
             except:
-                client_address = self.client.getnameinfo()
-
-                print(f'Klient {client_address[0]}:{client_address[1]} zakończył połączenie')
+                print(f'Klient {self.address[0]}:{self.address[1]} zakończył połączenie')
 
 
 class Server:
@@ -40,7 +39,7 @@ class Server:
 
                 print(f'Nowe połączenie z adresem {client_address[0]}:{client_address[1]}')
 
-                c = ClientThread(client_socket)
+                c = ClientThread(client_socket, client_address)
                 c.start()
 
 server = Server("127.0.0.1", 1350)
